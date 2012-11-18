@@ -1,4 +1,5 @@
 import System.Environment
+import Data.Char
 data Expresion = Or [Expresion] | And [Expresion] | Variable Int Int Int Bool | Verdadero | Falso
                deriving (Show, Read)
 
@@ -55,6 +56,11 @@ toDimacs (And xs) = unlines (encabezado:clausulas)
         stringify (Or xs) = concat $ map stringify xs
 
 
+
+trim :: String -> String
+trim = f . f
+   where f = reverse . dropWhile isSpace
+
 -- Transformamos nuestra instancia a una serie de variables iniciales
 -- que ya tienen valor.
 variablesIniciales :: Int -> String -> [(Int, Int, Int)]
@@ -63,9 +69,9 @@ variablesIniciales i line = res
   where res = calc i (take 9 line) ++ variablesIniciales (i+1) (drop 9 line)
         calc _ "" = []
         calc i ('.':xs) = calc i xs
-        calc i (x:xs) = (i, 8-length(xs), read [x] :: Int):(calc i xs)
+        calc i (x:xs) = (i, 8-length(xs), digitToInt x):(calc i xs)
 
 main :: IO ()
 main = do
   args <- getArgs
-  putStrLn $ toDimacs $ reglas $ variablesIniciales 0 (args !! 0)
+  putStrLn $ toDimacs $ reglas $ variablesIniciales 0 (trim (args !! 0))
